@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Developer - Task Management System</title>
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --bg: #f0f2f5;
+            --column-bg: #ebedf0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .board {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .column {
+            background-color: var(--column-bg);
+            border-radius: 8px;
+            width: 300px;
+            min-height: 500px;
+            padding: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .column h2 {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #333;
+            margin-top: 0;
+        }
+
+        .task-list {
+            min-height: 450px;
+        }
+
+        .task-card {
+            background: white;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            cursor: grab;
+            position: relative;
+        }
+
+        .task-card:active {
+            cursor: grabbing;
+        }
+
+        .add-task-btn {
+            width: 100%;
+            padding: 10px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .add-task-btn:hover {
+            background-color: #357abd;
+        }
+
+        /* Notifications style */
+        #notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Kanban Task Board</h1>
+        <p>IT Developer Internship Project</p>
+        <button class="add-task-btn" onclick="addNewTask()" style="width: 200px;">+ Add New Task</button>
+    </header>
+
+    <div id="notification">Task Updated!</div>
+
+    <div class="board">
+        <div class="column" ondrop="drop(event)" ondragover="allowDrop(event)" id="todo">
+            <h2>📝 To Do</h2>
+            <div class="task-list" id="todo-list">
+                <div class="task-card" draggable="true" ondragstart="drag(event)" id="task1">
+                    <strong>Sample Task</strong>
+                    <p>Drag me to In Progress!</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="column" ondrop="drop(event)" ondragover="allowDrop(event)" id="inprogress">
+            <h2>⏳ In Progress</h2>
+            <div class="task-list" id="inprogress-list"></div>
+        </div>
+
+        <div class="column" ondrop="drop(event)" ondragover="allowDrop(event)" id="done">
+            <h2>✅ Done</h2>
+            <div class="task-list" id="done-list"></div>
+        </div>
+    </div>
+
+    <script>
+        // Drag and Drop Functions
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.id);
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            var data = ev.dataTransfer.getData("text");
+            var draggedElement = document.getElementById(data);
+            
+            // Find the task list inside the column
+            let target = ev.target;
+            while (target && !target.classList.contains('column')) {
+                target = target.parentElement;
+            }
+
+            if (target) {
+                const list = target.querySelector('.task-list');
+                list.appendChild(draggedElement);
+                showNotification(`Task moved to ${target.id.toUpperCase()}`);
+            }
+        }
+
+        // Add New Task Function
+        function addNewTask() {
+            const taskTitle = prompt("Enter Task Title:");
+            if (taskTitle) {
+                const taskId = "task-" + Date.now();
+                const taskCard = document.createElement("div");
+                taskCard.className = "task-card";
+                taskCard.draggable = true;
+                taskCard.id = taskId;
+                taskCard.ondragstart = drag;
+                taskCard.innerHTML = `<strong>${taskTitle}</strong><p>Newly added task</p>`;
+                
+                document.getElementById("todo-list").appendChild(taskCard);
+                showNotification("New Task Added!");
+            }
+        }
+
+        // Notification Function
+        function showNotification(msg) {
+            const nav = document.getElementById("notification");
+            nav.innerText = msg;
+            nav.style.display = "block";
+            setTimeout(() => {
+                nav.style.display = "none";
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
