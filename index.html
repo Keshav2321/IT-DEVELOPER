@@ -5,181 +5,103 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IT Developer - Task Management System</title>
     <style>
-        :root {
-            --primary: #4a90e2;
-            --bg: #f0f2f5;
-            --column-bg: #ebedf0;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg);
-            margin: 0;
-            padding: 20px;
-        }
-
-        header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .board {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            align-items: flex-start;
-            flex-wrap: wrap;
-        }
-
-        .column {
-            background-color: var(--column-bg);
-            border-radius: 8px;
-            width: 300px;
-            min-height: 500px;
-            padding: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .column h2 {
-            text-align: center;
-            font-size: 1.2rem;
-            color: #333;
-            margin-top: 0;
-        }
-
-        .task-list {
-            min-height: 450px;
-        }
-
-        .task-card {
-            background: white;
-            border-radius: 5px;
-            padding: 15px;
-            margin-bottom: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            cursor: grab;
-            position: relative;
-        }
-
-        .task-card:active {
-            cursor: grabbing;
-        }
-
-        .add-task-btn {
-            width: 100%;
-            padding: 10px;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
-
-        .add-task-btn:hover {
-            background-color: #357abd;
-        }
-
-        /* Notifications style */
-        #notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #333;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 5px;
-            display: none;
-            z-index: 1000;
-        }
+        :root { --primary: #4a90e2; --bg: #f0f2f5; --column-bg: #ebedf0; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; padding: 20px; }
+        
+        /* Login Form Styles */
+        #login-container { max-width: 400px; margin: 100px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
+        input { width: 90%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; }
+        .btn { width: 100%; padding: 10px; background: var(--primary); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        
+        /* Dashboard Styles (Initially Hidden) */
+        #dashboard { display: none; }
+        .board { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+        .column { background: var(--column-bg); border-radius: 8px; width: 300px; min-height: 400px; padding: 15px; }
+        .task-card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: grab; }
+        #notification { position: fixed; top: 20px; right: 20px; background: #333; color: white; padding: 10px; display: none; border-radius: 5px; }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>Kanban Task Board</h1>
-        <p>IT Developer Internship Project</p>
-        <button class="add-task-btn" onclick="addNewTask()" style="width: 200px;">+ Add New Task</button>
-    </header>
+    <div id="notification">Action Completed!</div>
 
-    <div id="notification">Task Updated!</div>
+    <div id="login-container">
+        <h2>Member Login</h2>
+        <input type="text" id="username" placeholder="Username (Any name)">
+        <input type="password" placeholder="Password (Any password)">
+        <button class="btn" onclick="handleLogin()">Login</button>
+        <p style="font-size: 12px; color: gray;">IT Developer Project - Phase 1</p>
+    </div>
 
-    <div class="board">
-        <div class="column" ondrop="drop(event)" ondragover="allowDrop(event)" id="todo">
-            <h2>📝 To Do</h2>
-            <div class="task-list" id="todo-list">
-                <div class="task-card" draggable="true" ondragstart="drag(event)" id="task1">
-                    <strong>Sample Task</strong>
-                    <p>Drag me to In Progress!</p>
-                </div>
+    <div id="dashboard">
+        <header style="text-align: center;">
+            <h1>Task Board - <span id="user-display"></span></h1>
+            <button class="btn" onclick="addNewTask()" style="width: 200px;">+ Add New Task</button>
+            <button onclick="location.reload()" style="background: none; border: none; color: red; cursor: pointer;">Logout</button>
+        </header>
+
+        <div class="board">
+            <div class="column" ondrop="drop(event)" ondragover="allowDrop(event)" id="todo">
+                <h2>📝 To Do</h2>
+                <div id="todo-list" style="min-height: 350px;"></div>
             </div>
-        </div>
-
-        <div class="column" ondrop="drop(event)" ondragover="allowDrop(event)" id="inprogress">
-            <h2>⏳ In Progress</h2>
-            <div class="task-list" id="inprogress-list"></div>
-        </div>
-
-        <div class="column" ondrop="drop(event)" ondragover="allowDrop(event)" id="done">
-            <h2>✅ Done</h2>
-            <div class="task-list" id="done-list"></div>
+            <div class="column" ondrop="drop(event)" ondragover="allowDrop(event)" id="inprogress">
+                <h2>⏳ In Progress</h2>
+                <div id="inprogress-list" style="min-height: 350px;"></div>
+            </div>
+            <div class="column" ondrop="drop(event)" ondragover="allowDrop(event)" id="done">
+                <h2>✅ Done</h2>
+                <div id="done-list" style="min-height: 350px;"></div>
+            </div>
         </div>
     </div>
 
     <script>
-        // Drag and Drop Functions
-        function allowDrop(ev) {
-            ev.preventDefault();
+        // Simple Login Logic
+        function handleLogin() {
+            const user = document.getElementById('username').value;
+            if (user.trim() !== "") {
+                document.getElementById('login-container').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                document.getElementById('user-display').innerText = user;
+                showNotification("Welcome, " + user);
+            } else {
+                alert("Please enter a username");
+            }
         }
 
-        function drag(ev) {
-            ev.dataTransfer.setData("text", ev.target.id);
-        }
-
+        // Drag and Drop Logic
+        function allowDrop(ev) { ev.preventDefault(); }
+        function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); }
         function drop(ev) {
             ev.preventDefault();
             var data = ev.dataTransfer.getData("text");
-            var draggedElement = document.getElementById(data);
-            
-            // Find the task list inside the column
-            let target = ev.target;
-            while (target && !target.classList.contains('column')) {
-                target = target.parentElement;
-            }
-
+            var target = ev.target;
+            while (target && !target.classList.contains('column')) { target = target.parentElement; }
             if (target) {
-                const list = target.querySelector('.task-list');
-                list.appendChild(draggedElement);
-                showNotification(`Task moved to ${target.id.toUpperCase()}`);
+                target.querySelector('div').appendChild(document.getElementById(data));
+                showNotification("Task moved to " + target.id);
             }
         }
 
-        // Add New Task Function
+        // Add Task Logic
         function addNewTask() {
-            const taskTitle = prompt("Enter Task Title:");
-            if (taskTitle) {
-                const taskId = "task-" + Date.now();
-                const taskCard = document.createElement("div");
-                taskCard.className = "task-card";
-                taskCard.draggable = true;
-                taskCard.id = taskId;
-                taskCard.ondragstart = drag;
-                taskCard.innerHTML = `<strong>${taskTitle}</strong><p>Newly added task</p>`;
-                
-                document.getElementById("todo-list").appendChild(taskCard);
-                showNotification("New Task Added!");
+            const title = prompt("Enter Task:");
+            if (title) {
+                const id = "t-" + Date.now();
+                const card = document.createElement("div");
+                card.className = "task-card"; card.draggable = true; card.id = id;
+                card.ondragstart = drag;
+                card.innerHTML = `<strong>${title}</strong><p>Assigned to: ${document.getElementById('user-display').innerText}</p>`;
+                document.getElementById("todo-list").appendChild(card);
+                showNotification("Task Created!");
             }
         }
 
-        // Notification Function
         function showNotification(msg) {
-            const nav = document.getElementById("notification");
-            nav.innerText = msg;
-            nav.style.display = "block";
-            setTimeout(() => {
-                nav.style.display = "none";
-            }, 2000);
+            const n = document.getElementById("notification");
+            n.innerText = msg; n.style.display = "block";
+            setTimeout(() => { n.style.display = "none"; }, 2000);
         }
     </script>
 </body>
