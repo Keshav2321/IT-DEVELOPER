@@ -3,106 +3,260 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IT Developer - Task Management System</title>
+    <title>IT Dev Pro - Task Manager</title>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        :root { --primary: #4a90e2; --bg: #f0f2f5; --column-bg: #ebedf0; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); margin: 0; padding: 20px; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap');
+
+        :root {
+            --bg: #0b0f1a;
+            --sidebar: #131926;
+            --card: #1c2536;
+            --accent: #6366f1;
+            --text-p: #94a3b8;
+            --high: #ef4444;
+            --med: #f59e0b;
+            --low: #10b981;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg);
+            color: white;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 260px;
+            background: var(--sidebar);
+            border-right: 1px solid rgba(255,255,255,0.05);
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            border-radius: 12px;
+            color: var(--text-p);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: white; transform: translateX(5px); }
+        .nav-item.active { background: var(--accent); color: white; box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.4); }
+
+        /* --- CONTENT AREAS --- */
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; display: none; }
+        .main-content.active { display: block; animation: sectionFadeIn 0.5s ease-out; }
+
+        @keyframes sectionFadeIn {
+            from { opacity: 0; transform: scale(0.99); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* --- HEADER LOGIC --- */
+        header {
+            display: flex;
+            justify-content: space-between; /* This moves button to extreme right */
+            align-items: center;
+            margin-bottom: 40px;
+            width: 100%;
+        }
+
+        .btn-add {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px rgba(99, 102, 241, 0.5);
+            filter: brightness(1.1);
+        }
+
+        /* --- TASK CARDS & ANIMATIONS --- */
+        .task-card {
+            background: var(--card);
+            padding: 18px;
+            border-radius: 16px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255,255,255,0.03);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        .task-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            border-color: var(--accent);
+            box-shadow: 0 15px 30px -10px rgba(0,0,0,0.5);
+        }
+
+        .list-animation {
+            animation: slideIn 0.5s ease forwards;
+            opacity: 0;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tag { font-size: 10px; padding: 4px 8px; border-radius: 6px; font-weight: 800; margin-bottom: 8px; display: inline-block; }
+        .tag-high { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .tag-med { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        .tag-low { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+
+        .board { display: flex; gap: 20px; align-items: flex-start; }
+        .column { background: rgba(28, 37, 54, 0.4); width: 340px; border-radius: 20px; padding: 20px; min-height: 400px; }
         
-        /* Login Form Styles */
-        #login-container { max-width: 400px; margin: 100px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
-        input { width: 90%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px; }
-        .btn { width: 100%; padding: 10px; background: var(--primary); color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        
-        /* Dashboard Styles (Initially Hidden) */
-        #dashboard { display: none; }
-        .board { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
-        .column { background: var(--column-bg); border-radius: 8px; width: 300px; min-height: 400px; padding: 15px; }
-        .task-card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); cursor: grab; }
-        #notification { position: fixed; top: 20px; right: 20px; background: #333; color: white; padding: 10px; display: none; border-radius: 5px; }
+        #login-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
-    <div id="notification">Action Completed!</div>
-
-    <div id="login-container">
-        <h2>Member Login</h2>
-        <input type="text" id="username" placeholder="Username (Any name)">
-        <input type="password" placeholder="Password (Any password)">
-        <button class="btn" onclick="handleLogin()">Login</button>
-        <p style="font-size: 12px; color: gray;">IT Developer Project - Phase 1</p>
+    <div id="login-overlay">
+        <div style="background:var(--card); padding:40px; border-radius:20px; text-align:center; width:320px; border:1px solid rgba(255,255,255,0.05);">
+            <h1 style="color:var(--accent); margin-bottom:10px;">IT DEV PRO</h1>
+            <input type="text" id="username" placeholder="Enter Your Name" style="width:100%; padding:14px; margin:20px 0; border-radius:10px; border:none; background:#0b0f1a; color:white; box-sizing: border-box; outline:none; border:1px solid #333;">
+            <button onclick="login()" style="width:100%; padding:14px; border-radius:10px; border:none; background:var(--accent); color:white; font-weight:bold; cursor:pointer;">Launch Dashboard</button>
+        </div>
     </div>
 
-    <div id="dashboard">
-        <header style="text-align: center;">
-            <h1>Task Board - <span id="user-display"></span></h1>
-            <button class="btn" onclick="addNewTask()" style="width: 200px;">+ Add New Task</button>
-            <button onclick="location.reload()" style="background: none; border: none; color: red; cursor: pointer;">Logout</button>
-        </header>
+    <div class="sidebar">
+        <h2 style="margin: 10px 0 30px 10px;">IT DEV <span style="color:var(--accent)">.</span></h2>
+        <div class="nav-item active" onclick="showSection('board-sec', this)"><i data-lucide="layout-dashboard"></i> Board</div>
+        <div class="nav-item" onclick="showSection('tasks-sec', this)"><i data-lucide="check-circle"></i> My Tasks</div>
+        <div class="nav-item" onclick="showSection('team-sec', this)"><i data-lucide="users"></i> Team</div>
+        <div class="nav-item" onclick="showSection('settings-sec', this)"><i data-lucide="settings"></i> Settings</div>
+        <div class="nav-item" onclick="location.reload()" style="margin-top:auto; color:#ef4444;"><i data-lucide="log-out"></i> Logout</div>
+    </div>
 
+    <div id="board-sec" class="main-content active">
+        <header>
+            <h1>Project Board</h1>
+            <button class="btn-add" onclick="addTask()">+ New Task</button>
+        </header>
         <div class="board">
-            <div class="column" ondrop="drop(event)" ondragover="allowDrop(event)" id="todo">
-                <h2>📝 To Do</h2>
-                <div id="todo-list" style="min-height: 350px;"></div>
+            <div class="column" id="todo" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <h3 style="margin-bottom:20px; font-size:14px; color:var(--text-p); letter-spacing:1px;">TO DO</h3>
+                <div class="task-list" id="todo-list" style="min-height:300px;"></div>
             </div>
-            <div class="column" ondrop="drop(event)" ondragover="allowDrop(event)" id="inprogress">
-                <h2>⏳ In Progress</h2>
-                <div id="inprogress-list" style="min-height: 350px;"></div>
+            <div class="column" id="inprogress" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <h3 style="margin-bottom:20px; font-size:14px; color:var(--text-p); letter-spacing:1px;">IN PROGRESS</h3>
+                <div class="task-list" id="inprogress-list" style="min-height:300px;"></div>
             </div>
-            <div class="column" ondrop="drop(event)" ondragover="allowDrop(event)" id="done">
-                <h2>✅ Done</h2>
-                <div id="done-list" style="min-height: 350px;"></div>
+            <div class="column" id="done" ondrop="drop(event)" ondragover="allowDrop(event)">
+                <h3 style="margin-bottom:20px; font-size:14px; color:var(--text-p); letter-spacing:1px;">COMPLETED</h3>
+                <div class="task-list" id="done-list" style="min-height:300px;"></div>
             </div>
         </div>
     </div>
 
+    <div id="tasks-sec" class="main-content">
+        <header>
+            <h1>Personal Tasks</h1>
+            <button class="btn-add" onclick="showSection('board-sec', document.querySelector('.nav-item'))">Go to Board</button>
+        </header>
+        <div id="task-list-view"></div>
+    </div>
+
+    <div id="team-sec" class="main-content"><h1>Team Members</h1><p>Invite and manage your team here.</p></div>
+    <div id="settings-sec" class="main-content"><h1>Settings</h1><p>Configure your workspace preferences.</p></div>
+
     <script>
-        // Simple Login Logic
-        function handleLogin() {
-            const user = document.getElementById('username').value;
-            if (user.trim() !== "") {
-                document.getElementById('login-container').style.display = 'none';
-                document.getElementById('dashboard').style.display = 'block';
-                document.getElementById('user-display').innerText = user;
-                showNotification("Welcome, " + user);
-            } else {
-                alert("Please enter a username");
-            }
+        function showSection(sectionId, element) {
+            document.querySelectorAll('.main-content').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            if(element) element.classList.add('active');
+            if(sectionId === 'tasks-sec') renderListView();
+            lucide.createIcons();
         }
 
-        // Drag and Drop Logic
-        function allowDrop(ev) { ev.preventDefault(); }
-        function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); }
-        function drop(ev) {
-            ev.preventDefault();
-            var data = ev.dataTransfer.getData("text");
-            var target = ev.target;
-            while (target && !target.classList.contains('column')) { target = target.parentElement; }
-            if (target) {
-                target.querySelector('div').appendChild(document.getElementById(data));
-                showNotification("Task moved to " + target.id);
-            }
+        function login() { if(document.getElementById('username').value) { document.getElementById('login-overlay').style.display = 'none'; load(); } }
+
+        function addTask() {
+            const title = prompt("Enter Task Title:");
+            const prio = prompt("Priority (High, Med, Low):") || "low";
+            if(title) { createTaskCard(title, prio.toLowerCase(), 'todo-list', 't-' + Date.now()); save(); }
         }
 
-        // Add Task Logic
-        function addNewTask() {
-            const title = prompt("Enter Task:");
-            if (title) {
-                const id = "t-" + Date.now();
-                const card = document.createElement("div");
-                card.className = "task-card"; card.draggable = true; card.id = id;
-                card.ondragstart = drag;
-                card.innerHTML = `<strong>${title}</strong><p>Assigned to: ${document.getElementById('user-display').innerText}</p>`;
-                document.getElementById("todo-list").appendChild(card);
-                showNotification("Task Created!");
-            }
+        function createTaskCard(title, priority, listId, id) {
+            const card = document.createElement('div');
+            card.className = 'task-card';
+            card.id = id;
+            card.draggable = true;
+            card.ondragstart = (e) => e.dataTransfer.setData('text', id);
+            const pClass = priority === 'high' ? 'tag-high' : (priority === 'med' ? 'tag-med' : 'tag-low');
+            card.innerHTML = `
+                <span class="tag ${pClass}">${priority}</span>
+                <div style="font-weight:600; font-size:16px; margin-bottom:10px;">${title}</div>
+                <div style="font-size:11px; color:var(--text-p); display:flex; justify-content:space-between;">
+                    <span>Created: ${new Date().toLocaleDateString()}</span>
+                    <span onclick="deleteTask('${id}')" style="cursor:pointer; color:#ef4444; font-weight:bold;">DELETE</span>
+                </div>
+            `;
+            document.getElementById(listId).appendChild(card);
         }
 
-        function showNotification(msg) {
-            const n = document.getElementById("notification");
-            n.innerText = msg; n.style.display = "block";
-            setTimeout(() => { n.style.display = "none"; }, 2000);
+        function renderListView() {
+            const container = document.getElementById('task-list-view');
+            container.innerHTML = "";
+            document.querySelectorAll('.board .task-card').forEach((card, i) => {
+                const clone = card.cloneNode(true);
+                clone.draggable = false;
+                clone.classList.add('list-animation');
+                clone.style.animationDelay = `${i * 0.1}s`;
+                container.appendChild(clone);
+            });
         }
+
+        function deleteTask(id) { document.getElementById(id).remove(); save(); if(document.getElementById('tasks-sec').classList.contains('active')) renderListView(); }
+        function allowDrop(e) { e.preventDefault(); }
+        function drop(e) {
+            e.preventDefault();
+            const id = e.dataTransfer.getData('text');
+            let target = e.target;
+            while(target && !target.classList.contains('column')) target = target.parentElement;
+            if(target) { target.querySelector('.task-list').appendChild(document.getElementById(id)); save(); }
+        }
+
+        function save() {
+            const data = { todo: document.getElementById('todo-list').innerHTML, prog: document.getElementById('inprogress-list').innerHTML, done: document.getElementById('done-list').innerHTML };
+            localStorage.setItem('finalAnimatedBoard', JSON.stringify(data));
+        }
+
+        function load() {
+            const saved = localStorage.getItem('finalAnimatedBoard');
+            if(saved) {
+                const d = JSON.parse(saved);
+                document.getElementById('todo-list').innerHTML = d.todo;
+                document.getElementById('inprogress-list').innerHTML = d.prog;
+                document.getElementById('done-list').innerHTML = d.done;
+                document.querySelectorAll('.task-card').forEach(c => { c.ondragstart = (e) => e.dataTransfer.setData('text', c.id); });
+            }
+            lucide.createIcons();
+        }
+
+        lucide.createIcons();
     </script>
 </body>
 </html>
